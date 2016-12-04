@@ -5,38 +5,27 @@
 #
 # You can learn more about package authoring with RStudio at:
 #
-#   http://r-pkgs.had.co.nz/
 #
 # Some useful keyboard shortcuts for package authoring:
 #
 #   Build and Reload Package:  'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
+#   Check Package:             'Ctrl + Shift + E'#   http://r-pkgs.had.co.nz/
+
 #   Test Package:              'Ctrl + Shift + T'
 
-hello <- function() {
-  print("Hello, world!")
+
+generate_parameters = function(lambda,n){
+  rexp(n,rep(lambda,n));
 }
 
-roll_dices <- function(dice_sides, roll_number) {
-  if(missing(dice_sides)){
-    N = 6
-  }
-  if(dice_sides<1){
-    return(0)
-  }
+lambda = 3
+n = 20
+sum = 0
 
-  if(missing(roll_number)){
-    roll_number = 1
-  }
-  if(roll_number<1){
-    return(0)
-  }
+parameters = sort(generate_parameters(lambda,n))
 
-  x = ceiling( runif(roll_number, 0, dice_sides) )
-
-  return(x)
-}
-
-draw_card <- function(){
-
-}
+dyn.load("Desktop/Faks/ViS/RPaket/ViS/funkcija.so")
+ptm <- proc.time()
+out = .C("funkcija", n=as.integer(n), x = as.double(parameters), sum = as.double(sum))
+proc.time() - ptm
+out$sum
