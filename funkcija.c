@@ -62,7 +62,93 @@ void perm_unoptimized(int arr[], int n, int k, double *perm_arr, int *sum) {
     }
 }
 
-void perm(double perm_arr[], int *sum) {
+int optimize_comb (int a, int b, int c, int d, int e, int *skip_perm, double *params) {
+  int povratna = 120;
+  int new[] = {0,0,0,0,0};
+  int niz[] = {a,b,c,d,e};
+
+  int i;
+  for (i=0;i<5;i++) {
+    if (niz[i]==a)
+      new[0]+=1;
+    if (niz[i]==b)
+      new[1]+=1;
+    if (niz[i]==c)
+      new[2]+=1;
+    if (niz[i]==d)
+      new[3]+=1;
+    if (niz[i]==e)
+      new[4]+=1;
+  }
+  // ako ima 5 istih
+  // vrati nulu, stara optimizacija
+  int max=0;
+  int max_pos=0;
+  for(i=0;i<5;i++){
+    if(new[i]>max){
+      max = new[i];
+      max_pos = i;
+    }
+  }
+
+  if(max==5){
+    *skip_perm = 1;
+    return 0;
+  }
+
+  int once;
+  if(max==4){
+    for(i=0;i<5;i++){
+      if(niz[i]!=niz[max_pos]){
+        once = i;
+        break;
+      }
+    }
+    if(params[niz[once]] < params[niz[max_pos]]){//4 ista, peti manji
+      *skip_perm = 1;
+      return 0;
+    }
+    return 5;
+  }
+
+  if(max==3){
+    povratna/=6;
+    int br = 1;
+    int old = -1; // HACK, eksponencijalna vraca pozitivne vrednosti
+    for(i=0;i<5;i++){
+      if(niz[i] != niz[max_pos]){
+        if(old == niz[i]){
+          br++;
+        }
+        old = niz[i];
+      }
+    }
+    if(br == 2)
+      povratna/=2;
+    return povratna;
+  }
+
+  if(max==2){
+    povratna/=2;
+    int br = 1;
+    int old = -1; // HACK, eksponencijalna vraca pozitivne vrednosti
+    for(i=0;i<5;i++){
+      if(niz[i] != niz[max_pos]){
+        if(old == niz[i]){
+          br++;
+        }
+        old = niz[i];
+      }
+    }
+    if(br == 2)
+      povratna/=2;
+    return povratna;
+  }
+
+  return 120;
+}
+
+void perm(double perm_arr[], int *sum, int comb) {
   int n=5;
   int i,j,k,l;
 
@@ -86,12 +172,15 @@ void perm(double perm_arr[], int *sum) {
         counter++;
       }
 
-      max_pom = max(med_max_arr[0],med_max_arr[1],med_max_arr[2]) < gen_1 ? 6 : 0;
-      med_pom = gen_2 + med(med_max_arr[0],med_max_arr[1],med_max_arr[2]) < gen_1 ? 6 : 0;
+      double maxD = max(med_max_arr[0],med_max_arr[1],med_max_arr[2]);
+      double medD = med(med_max_arr[0],med_max_arr[1],med_max_arr[2]);
+
+      max_pom = maxD < gen_1 ? comb*6 : 0;
+      med_pom = gen_2 + medD  < gen_1 ? comb*6 : 0;
       *sum += max_pom - med_pom;
 
-      max_pom = max(med_max_arr[0],med_max_arr[1],med_max_arr[2]) < gen_2 ? 6 : 0;
-      med_pom = gen_1 + med(med_max_arr[0],med_max_arr[1],med_max_arr[2]) < gen_2 ? 6 : 0;
+      max_pom = maxD < gen_2 ? comb*6 : 0;
+      med_pom = gen_1 + medD < gen_2 ? comb*6 : 0;
       *sum += max_pom - med_pom;
     }
   }
@@ -107,33 +196,38 @@ void funkcija(int *input_n, double* params, double *summ_out) {
   // int ii; unoptimized
   int sum = 0;
   for (i=0; i<n; i++) {
-    for (j=0; j<n; j++) {
-      for (k=0; k<n; k++) {
-        for (l=0; l<n; l++) {
-          for (m=0; m<n; m++) {
+    for (j=i; j<n; j++) {
+      for (k=j; k<n; k++) {
+        for (l=k; l<n; l++) {
+          for (m=l; m<n; m++) {
 
             // optimizacija za 4 jednaka i 5. manji, i za pet jednakih
             // suma im je nula u tom slucaju
-            if(
-            (equals(j,k,l,m) && params[j]>=params[i]) ||
-            (equals(i,k,l,m) && params[k]>=params[j]) ||
-            (equals(i,j,l,m) && params[l]>=params[k]) ||
-            (equals(i,j,k,m) && params[m]>=params[l]) ||
-            (equals(i,j,k,l) && params[i]>=params[m]))
-              continue;
+            // if(
+            // (equals(j,k,l,m) && params[j]>=params[i]) ||
+            // (equals(i,k,l,m) && params[k]>=params[j]) ||
+            // (equals(i,j,l,m) && params[l]>=params[k]) ||
+            // (equals(i,j,k,m) && params[m]>=params[l]) ||
+            // (equals(i,j,k,l) && params[i]>=params[m]))
+            //   continue;
 
-            perm_arr[0] = params[i];
-            perm_arr[1] = params[j];
-            perm_arr[2] = params[k];
-            perm_arr[3] = params[l];
-            perm_arr[4] = params[m];
+            int skip_perm=0;
+            int comb = optimize_comb(i,j,k,l,m,&skip_perm,params);
 
-            // unoptimized
-            // for(ii=0;ii<5;ii++){
-            //   perm_arr_helper[ii] = ii+1;
-            // }
-            // perm_unoptimized(perm_arr_helper,5,0,perm_arr,&sum);
-            perm(perm_arr,&sum);
+            if(!skip_perm){
+              perm_arr[0] = params[i];
+              perm_arr[1] = params[j];
+              perm_arr[2] = params[k];
+              perm_arr[3] = params[l];
+              perm_arr[4] = params[m];
+
+              // unoptimized
+              // for(ii=0;ii<5;ii++){
+              //   perm_arr_helper[ii] = ii+1;
+              // }
+              // perm_unoptimized(perm_arr_helper,5,0,perm_arr,&sum);
+              perm(perm_arr,&sum,comb);
+            }
           }
         }
       }
