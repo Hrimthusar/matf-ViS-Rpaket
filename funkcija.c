@@ -2,65 +2,8 @@
 // #include <R.h>
 // #include <Rinternals.h>
 
-void swap(int *arr, int a, int b){
-  int x = arr[a];
-  arr[a] = arr[b];
-  arr[b] = x;
-}
-
-int equals(double a, double b, double c, double d){
-  if(a!=b || b!=c || c!=d)
-    return 0;
-  return 1;
-}
-
-double max(double a, double b, double c){
-  if(a>b){
-    if(a>c)
-      return a;
-    if(c>a)
-      return c;
-  }
-  if(b>c)
-    return b;
-  return c;
-}
-
-double med(double a, double b, double c){
-  if(a>b){
-    if(a>c){
-      if(b>c)
-        return b;
-      return c;
-    }
-    return a;
-  }
-  if(b>c){
-    if(a>c)
-      return a;
-    return c;
-  }
-  return b;
-}
-
-void perm_unoptimized(int arr[], int n, int k, double *perm_arr, int *sum) {
-  int i;
-  int max_pom;
-  int med_pom;
-
-  if(k == n){
-    max_pom = max(perm_arr[arr[1]-1],perm_arr[arr[2]-1],perm_arr[arr[3]-1]) < perm_arr[arr[4]-1] ? 1 : 0;
-    med_pom = perm_arr[arr[0]-1] + med(perm_arr[arr[1]-1],perm_arr[arr[2]-1],perm_arr[arr[3]-1]) < perm_arr[arr[4]-1] ? 1 : 0;
-
-    *sum += max_pom - med_pom;
-  }
-  else
-    for (i=k; i<n; i++) {
-      swap(arr, k, i);
-      perm_unoptimized(arr, n, k+1, perm_arr, sum);
-      swap(arr, k, i);
-    }
-}
+#define MAX(a,b,c) c
+#define MED(a,b,c) b
 
 int optimize_comb (int a, int b, int c, int d, int e, int *skip_perm, double *params) {
   int povratna = 120;
@@ -80,6 +23,7 @@ int optimize_comb (int a, int b, int c, int d, int e, int *skip_perm, double *pa
     if (niz[i]==e)
       new[4]+=1;
   }
+  
   // ako ima 5 istih
   // vrati nulu, stara optimizacija
   int max=0;
@@ -114,7 +58,7 @@ int optimize_comb (int a, int b, int c, int d, int e, int *skip_perm, double *pa
   if(max==3){
     povratna/=6;
     int br = 1;
-    int old = -1; // HACK, eksponencijalna vraca pozitivne vrednosti
+    int old = -1; // HACK, indeksi su pa vraca pozitivne vrednosti
     for(i=0;i<5;i++){
       if(niz[i] != niz[max_pos]){
         if(old == niz[i]){
@@ -131,7 +75,7 @@ int optimize_comb (int a, int b, int c, int d, int e, int *skip_perm, double *pa
   if(max==2){
     povratna/=2;
     int br = 1;
-    int old = -1; // HACK, eksponencijalna vraca pozitivne vrednosti
+    int old = -1; // HACK, indeksi su pa vraca pozitivne vrednosti
     for(i=0;i<5;i++){
       if(niz[i] != niz[max_pos]){
         if(old == niz[i]){
@@ -172,18 +116,18 @@ void perm(double perm_arr[], int *sum, int comb) {
         counter++;
       }
 
-      double maxD = max(med_max_arr[0],med_max_arr[1],med_max_arr[2]);
-      double medD = med(med_max_arr[0],med_max_arr[1],med_max_arr[2]);
+      double maxD = MAX(med_max_arr[0],med_max_arr[1],med_max_arr[2]);
+      double medD = MED(med_max_arr[0],med_max_arr[1],med_max_arr[2]);
+
 
       max_pom = maxD < gen_1 ? comb*6 : 0;
       med_pom = gen_2 + medD  < gen_1 ? comb*6 : 0;
       *sum += max_pom - med_pom;
-
       max_pom = maxD < gen_2 ? comb*6 : 0;
       med_pom = gen_1 + medD < gen_2 ? comb*6 : 0;
       *sum += max_pom - med_pom;
-    }
-  }
+    }
+  }
 }
 
 
